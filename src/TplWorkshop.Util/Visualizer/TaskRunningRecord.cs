@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace TplWorkshop.Util.Visualizer
 {
-    public class TaskRunningRecord
+    internal class TaskRunningRecord
     {
         private readonly string m_name;
         private readonly Guid m_id;
@@ -11,6 +11,7 @@ namespace TplWorkshop.Util.Visualizer
         private readonly DateTime m_endTime;
         private readonly object m_taskResult;
         private readonly Exception m_capturedError;
+        private readonly int m_threadId;
 
         public TaskRunningRecord(
             string name,
@@ -18,7 +19,8 @@ namespace TplWorkshop.Util.Visualizer
             DateTime startTime, 
             DateTime endTime,
             object taskResult, 
-            Exception capturedError)
+            Exception capturedError, 
+            int threadId)
         {
             m_name = name;
             m_id = id;
@@ -26,6 +28,7 @@ namespace TplWorkshop.Util.Visualizer
             m_endTime = endTime;
             m_taskResult = taskResult;
             m_capturedError = capturedError;
+            m_threadId = threadId;
         }
 
         public Guid Id
@@ -62,8 +65,23 @@ namespace TplWorkshop.Util.Visualizer
         {
             get
             {
-                return m_capturedError != null ? TaskStatus.Faulted : TaskStatus.RanToCompletion;
+                if (m_capturedError == null)
+                {
+                    return TaskStatus.RanToCompletion;
+                }
+
+                if (m_capturedError is TaskCanceledException)
+                {
+                    return TaskStatus.Canceled;
+                }
+                    
+                return TaskStatus.Faulted;
             }
+        }
+
+        public int ThreadId
+        {
+            get { return m_threadId; }
         }
     }
 }

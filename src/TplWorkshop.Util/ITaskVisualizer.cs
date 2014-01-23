@@ -4,7 +4,8 @@ namespace TplWorkshop.Util
 {
     public interface ITaskVisualizer
     {
-        T RunAction<T>(TimeSpan delayDuration, Func<T> runAction, string name = null);
+        T RunFunc<T>(TimeSpan delayDuration, Func<T> runAction, string name = null);
+        void RunAction(TimeSpan delayDuration, Action runAction, string name = null);
         ITaskVisualizerReport GetReport();
     }
 }

@@ -9,16 +9,16 @@ namespace TplWorkshop.Util.Facts
 {
     public class TaskVisualizerFact
     {
-        private static List<TaskRunningRecord> GetAllRecords(ITaskVisualizerReport report)
+        private static List<ITaskVisualizerRecord> GetAllRecords(ITaskVisualizerReport report)
         {
-            return report.Data.SelectMany(r => r.Value).ToList();
+            return report.Threads.SelectMany(r => r.Tasks).ToList();
         }
             
         [Fact]
         public void should_add_new_record_after_action_running()
         {
             var taskVisualizer = new TaskVisualizer();
-            taskVisualizer.RunAction(TimeSpan.FromSeconds(1), () => new object());
+            taskVisualizer.RunFunc(TimeSpan.FromSeconds(1), () => new object());
 
             ITaskVisualizerReport report = taskVisualizer.GetReport();
             Assert.Equal(1, GetAllRecords(report).Count);
@@ -29,10 +29,10 @@ namespace TplWorkshop.Util.Facts
         {
             var taskVisualizer = new TaskVisualizer();
             const string expected = "task";
-            taskVisualizer.RunAction(TimeSpan.FromSeconds(1), () => new object(), expected);
+            taskVisualizer.RunFunc(TimeSpan.FromSeconds(1), () => new object(), expected);
 
             ITaskVisualizerReport report = taskVisualizer.GetReport();
-            TaskRunningRecord record = GetAllRecords(report).Single();
+            ITaskVisualizerRecord record = GetAllRecords(report).Single();
 
             Assert.Equal(expected, record.Name);
         }
@@ -42,26 +42,26 @@ namespace TplWorkshop.Util.Facts
         {
             var taskVisualizer = new TaskVisualizer();
             TimeSpan delayDuration = TimeSpan.FromSeconds(3);
-            taskVisualizer.RunAction(delayDuration, () => new object());
+            taskVisualizer.RunFunc(delayDuration, () => new object());
 
             ITaskVisualizerReport report = taskVisualizer.GetReport();
-            TaskRunningRecord record = GetAllRecords(report).Single();
+            ITaskVisualizerRecord record = GetAllRecords(report).Single();
 
-            Assert.True(record.EndTime - record.StartTime >= delayDuration);
+            Assert.True(record.Duration >= delayDuration.TotalSeconds);
         }
 
         [Fact]
         public void should_get_result()
         {
             var taskVisualizer = new TaskVisualizer();
-            var desiredResult = new object();
-            taskVisualizer.RunAction(TimeSpan.FromSeconds(1), () => desiredResult);
+            const string desiredResult = "hello";
+            taskVisualizer.RunFunc(TimeSpan.FromSeconds(1), () => desiredResult);
 
             ITaskVisualizerReport report = taskVisualizer.GetReport();
-            TaskRunningRecord record = GetAllRecords(report).Single();
+            ITaskVisualizerRecord record = GetAllRecords(report).Single();
 
-            Assert.Equal(TaskStatus.RanToCompletion, record.Status);
-            Assert.Same(desiredResult, record.TaskResult);
+            Assert.Equal((int)TaskStatus.RanToCompletion, record.TaskStatus);
+            Assert.Equal("String: hello", record.TaskResult);
         }
 
         [Fact]
@@ -69,17 +69,17 @@ namespace TplWorkshop.Util.Facts
         {
             var taskVisualizer = new TaskVisualizer();
 
-            var exception = Assert.Throws<ArgumentException>(() =>
+            Assert.Throws<ArgumentException>(() =>
             {
-                taskVisualizer.RunAction<object>(
+                taskVisualizer.RunFunc<object>(
                     TimeSpan.FromSeconds(1),
                     () => { throw new ArgumentException(); });
             });
 
-            TaskRunningRecord record = GetAllRecords(taskVisualizer.GetReport()).Single();
+            ITaskVisualizerRecord record = GetAllRecords(taskVisualizer.GetReport()).Single();
             
-            Assert.Same(exception, record.CapturedError);
-            Assert.Equal(TaskStatus.Faulted, record.Status);
+            Assert.NotNull(record.TaskError);
+            Assert.Equal((int)TaskStatus.Faulted, record.TaskStatus);
         }
     }
 }

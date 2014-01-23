@@ -1,19 +1,29 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace TplWorkshop.Util.Visualizer
 {
     internal class TaskVisualizer : ITaskVisualizer
     {
-        private readonly ConcurrentDictionary<int, ConcurrentQueue<TaskRunningRecord>> m_logs =
-            new ConcurrentDictionary<int, ConcurrentQueue<TaskRunningRecord>>();
+        private readonly ConcurrentBag<TaskRunningRecord> m_logs;
 
-        public T RunAction<T>(TimeSpan delayDuration, Func<T> runAction, string name = null)
+        public TaskVisualizer()
         {
-            RegisterCurrentThread();
-            var recordBuilder = new RecordBuilder().Init(name);
+            m_logs = new ConcurrentBag<TaskRunningRecord>();
+        }
+
+        public void SaveRecord(TaskRunningRecord record)
+        {
+            m_logs.Add(record);
+        }
+
+        public T RunFunc<T>(TimeSpan delayDuration, Func<T> runAction, string name = null)
+        {
+            var recordBuilder = new RecordBuilder().Init(
+                Thread.CurrentThread.ManagedThreadId, 
+                name);
             try
             {
                 Thread.Sleep(delayDuration);
@@ -28,25 +38,49 @@ namespace TplWorkshop.Util.Visualizer
             }
         }
 
-        private void SaveRecord(TaskRunningRecord record)
+        public void RunAction(TimeSpan delayDuration, Action runAction, string name = null)
         {
-            m_logs[Thread.CurrentThread.ManagedThreadId].Enqueue(record);
-        }
-
-        private void RegisterCurrentThread()
-        {
-            m_logs.TryAdd(Thread.CurrentThread.ManagedThreadId, new ConcurrentQueue<TaskRunningRecord>());
+            RunFunc(delayDuration, () =>
+            {
+                runAction();
+                return string.Empty;
+            }, name);
         }
 
         public ITaskVisualizerReport GetReport()
         {
-            var report = new TaskVisualizerReport();
-            foreach (KeyValuePair<int, ConcurrentQueue<TaskRunningRecord>> threadLog in m_logs)
+            TaskRunningRecord[] logs = m_logs.ToArray();
+            DateTime overallStartTime = logs.Min(log => log.StartTime);
+            DateTime overallEndTime = logs.Max(log => log.EndTime);
+            TaskVisualizerRecord[] records = logs.Select(log => new TaskVisualizerRecord
             {
-                report.AddThreadRecords(threadLog.Key, threadLog.Value);
-            }
+                ThreadId = log.ThreadId,
+                Duration = (log.EndTime - log.StartTime).TotalSeconds,
+                Name = log.Name,
+                RelativeEndSecond = (log.EndTime - overallStartTime).TotalSeconds,
+                RelativeStartSecond = (log.StartTime - overallStartTime).TotalSeconds,
+                TaskError = log.CapturedError.FormatTaskError(),
+                TaskResult = log.TaskResult.FormatTaskResult(),
+                TaskStatus = (int) log.Status
+            }).ToArray();
 
-            return report;
+            ITaskVisualizerThread[] threads = records
+                .GroupBy(r => r.ThreadId)
+                .Select(
+                    g =>
+                        (ITaskVisualizerThread) new TaskVisualizerThread
+                        {
+                            Name = string.Format("Thread #{0}", g.Key),
+                            Tasks = g.Cast<ITaskVisualizerRecord>().ToArray()
+                        })
+                .ToArray();
+
+            return new TaskVisualizerReport
+            {
+                Threads = threads,
+                TotalSeconds = (overallEndTime - overallStartTime).TotalSeconds,
+                TotalThreads = threads.Length
+            };
         }
     }
 }

@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="xunit">
@@ -43,13 +46,19 @@
     <Compile Include="Facts\RecordBuilderFact.cs" />
     <Compile Include="Facts\TaskVisualizerFact.cs" />
     <Compile Include="ITaskVisualizer.cs" />
+    <Compile Include="ITaskVisualizerRecord.cs" />
     <Compile Include="ITaskVisualizerReport.cs" />
+    <Compile Include="ITaskVisualizerThread.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TaskVisualizerActionExtension.cs" />
     <Compile Include="Visualizer\RecordBuilder.cs" />
     <Compile Include="Visualizer\TaskRunningRecord.cs" />
+    <Compile Include="Visualizer\TaskVisualizeExtension.cs" />
     <Compile Include="Visualizer\TaskVisualizer.cs" />
+    <Compile Include="Visualizer\TaskVisualizerRecord.cs" />
     <Compile Include="Visualizer\TaskVisualizerReport.cs" />
     <Compile Include="VisualizedTaskFact.cs" />
+    <Compile Include="Visualizer\TaskVisualizerThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

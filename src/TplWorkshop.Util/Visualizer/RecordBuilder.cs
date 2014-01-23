@@ -12,14 +12,16 @@ namespace TplWorkshop.Util.Visualizer
         private Exception m_error;
         private string m_name;
         private bool m_initialized;
+        private int m_threadId;
 
-        public RecordBuilder Init(string name)
+        public RecordBuilder Init(int threadId, string name)
         {
             if (m_initialized)
             {
                 throw new InvalidOperationException("Cannot initialize twice.");
             }
 
+            m_threadId = threadId;
             m_startTime = DateTime.Now;
             var normalizedName = string.IsNullOrWhiteSpace(name) 
                 ? GenerateUntitled() 
@@ -60,7 +62,8 @@ namespace TplWorkshop.Util.Visualizer
                 GetStartTime(),
                 GetEndTime(),
                 m_result,
-                m_error);
+                m_error,
+                m_threadId);
         }
 
         private void SaveResult(object result, bool isError)

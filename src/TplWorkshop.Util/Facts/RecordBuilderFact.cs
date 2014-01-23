@@ -7,6 +7,8 @@ namespace TplWorkshop.Util.Facts
 {
     public class RecordBuilderFact
     {
+        private const int FakeThreadId = 0;
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]
@@ -15,7 +17,7 @@ namespace TplWorkshop.Util.Facts
         {
             var recordBuilder = CreateRecordBuilder();
 
-            recordBuilder.Init(name);
+            recordBuilder.Init(FakeThreadId, name);
             TaskRunningRecord record = recordBuilder.Build(null);
 
             Assert.Equal("Untitled 1", record.Name);
@@ -26,9 +28,9 @@ namespace TplWorkshop.Util.Facts
         {
             RecordBuilder recordBuilder = CreateRecordBuilder();
 
-            recordBuilder.Init(null);
+            recordBuilder.Init(FakeThreadId, null);
 
-            Assert.Throws<InvalidOperationException>(() => recordBuilder.Init(null));
+            Assert.Throws<InvalidOperationException>(() => recordBuilder.Init(FakeThreadId, null));
         }
 
         [Fact]
@@ -38,8 +40,8 @@ namespace TplWorkshop.Util.Facts
             RecordBuilder recordBuilder1 = CreateRecordBuilder(false);
             RecordBuilder recordBuilder2 = CreateRecordBuilder(false);
 
-            recordBuilder1.Init(null);
-            recordBuilder2.Init(null);
+            recordBuilder1.Init(FakeThreadId, null);
+            recordBuilder2.Init(FakeThreadId, null);
 
             Assert.Equal("Untitled 1", recordBuilder1.Build(null).Name);
             Assert.Equal("Untitled 2", recordBuilder2.Build(null).Name);

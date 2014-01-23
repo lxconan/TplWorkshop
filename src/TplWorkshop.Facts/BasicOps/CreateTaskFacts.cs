@@ -3,16 +3,17 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TplWorkshop.Util;
 using Xunit;
 
 namespace TplWorkshop.Facts.BasicOps
 {
-    public class CreateTaskFacts : TimeTracingFacts
+    public class CreateTaskFacts : VisualizedTaskFact
     {
         [Fact]
         public void create_task_by_ctor()
         {
-            var task = new Task<string>(LongRunningOperations.WaitFor1SecAndReturnHello);
+            var task = new Task<string>(() => Visualizer.Wait1SecAndReturnHello("task 1"));
             task.Start();
             Assert.Equal("hello", task.Result);
         }
@@ -20,14 +21,14 @@ namespace TplWorkshop.Facts.BasicOps
         [Fact]
         public void create_task_by_factory()
         {
-            var task = Task.Factory.StartNew<string>(LongRunningOperations.WaitFor1SecAndReturnHello);
+            var task = Task.Factory.StartNew(() => Visualizer.Wait1SecAndReturnHello("task 1"));
             Assert.Equal("hello", task.Result);
         }
 
         [Fact]
         public void wait_for_one_task()
         {
-            var task = Task.Factory.StartNew<string>(LongRunningOperations.WaitFor1SecAndReturnHello);
+            var task = Task.Factory.StartNew(() => Visualizer.Wait1SecAndReturnHello("task 1"));
             task.Wait();
             Assert.True(task.IsCompleted);
             Assert.Equal("hello", task.Result);
@@ -38,9 +39,9 @@ namespace TplWorkshop.Facts.BasicOps
         {
             Task[] tasks =
             {
-                Task.Factory.StartNew<string>(LongRunningOperations.WaitFor1SecAndReturnHello),
-                Task.Factory.StartNew<string>(LongRunningOperations.WaitFor1SecAndReturnHello),
-                Task.Factory.StartNew<string>(LongRunningOperations.WaitFor1SecAndReturnHello)
+                Task.Factory.StartNew(() => Visualizer.Wait1SecAndReturnHello("task 1")),
+                Task.Factory.StartNew(() => Visualizer.Wait1SecAndReturnHello("task 2")),
+                Task.Factory.StartNew(() => Visualizer.Wait1SecAndReturnHello("task 3"))
             };
 
             Task.WaitAll(tasks);
@@ -52,14 +53,14 @@ namespace TplWorkshop.Facts.BasicOps
         {
             Task[] tasks =
             {
-                Task.Factory.StartNew<string>(LongRunningOperations.WaitFor3SecAndReturnHello),
-                Task.Factory.StartNew<string>(LongRunningOperations.WaitFor2SecAndReturnHello),
-                Task.Factory.StartNew<string>(LongRunningOperations.WaitFor1SecAndReturnHello)
+                Task.Factory.StartNew(() => Visualizer.Wait3SecAndReturnHello("task 1")),
+                Task.Factory.StartNew(() => Visualizer.Wait2SecAndReturnHello("task 2")),
+                Task.Factory.StartNew(() => Visualizer.Wait1SecAndReturnHello("task 3"))
             };
 
             int completeIndex = Task.WaitAny(tasks);
-            Trace.WriteLine("First completed task's index is : " + completeIndex);
 
+            Trace.WriteLine("First completed task's index is : " + completeIndex);
             Assert.True(tasks[completeIndex].IsCompleted);
 
             Task.WaitAll(tasks);
@@ -69,7 +70,9 @@ namespace TplWorkshop.Facts.BasicOps
         public void passing_data_to_task()
         {
             var state = new Object();
-            Task<object> task = Task.Factory.StartNew<object>(LongRunningOperations.WaitFor1SecAndEcho, state);
+            Task<object> task = Task.Factory.StartNew(
+                s => Visualizer.Wait1SecAndEcho(s, "task 1"), state);
+
             task.Wait();
             Assert.Same(state, task.Result);
         }
@@ -77,13 +80,13 @@ namespace TplWorkshop.Facts.BasicOps
         [Fact]
         public void create_child_task()
         {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                Task.Factory.StartNew(
-                    LongRunningOperations.WaitFor3Sec,
-                    TaskCreationOptions.AttachedToParent);
-                LongRunningOperations.WaitFor1Sec();
-            });
+            Task task = Task.Factory.StartNew(
+                () => Visualizer.RunAction(
+                    TimeSpan.FromSeconds(1),
+                    () => Task.Factory.StartNew(
+                        () => Visualizer.Wait3SecAndReturnHello("task 2"),
+                        TaskCreationOptions.AttachedToParent),
+                    "task 1"));
 
             task.Wait();
         }
@@ -93,8 +96,16 @@ namespace TplWorkshop.Facts.BasicOps
         {
             Task[] tasks =
             {
-                Task.Factory.StartNew(() => { throw new ArgumentException("ArgumentException"); }),
-                Task.Factory.StartNew(() => { throw new InvalidOperationException("InvalidOperationException"); })
+                Task.Factory.StartNew(() => 
+                    Visualizer.RunAction(
+                        TimeSpan.FromSeconds(1), 
+                        () => {throw new ArgumentException("ArgumentException");}, 
+                        "task 1")),
+                Task.Factory.StartNew(() => 
+                    Visualizer.RunAction(
+                        TimeSpan.FromSeconds(1), 
+                        () => {throw new InvalidOperationException("InvalidOperationException");}, 
+                        "task 2"))
             };
 
             try
@@ -117,16 +128,19 @@ namespace TplWorkshop.Facts.BasicOps
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             Task task = Task.Factory.StartNew(
-                () =>
-                {
-                    LongRunningOperations.WaitFor3Sec();
-                    if (cancellationToken.IsCancellationRequested)
+                () => Visualizer.RunAction(
+                    TimeSpan.FromSeconds(1),
+                    () =>
                     {
-                        throw new OperationCanceledException(cancellationToken);
-                    }
+                        Thread.Sleep(3000);
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            throw new OperationCanceledException(cancellationToken);
+                        }
 
-                    LongRunningOperations.WaitFor1Sec();
-                },
+                        Thread.Sleep(1000);
+                    },
+                    "task 1"),
                 cancellationToken);
 
             Thread.Sleep(500);
@@ -134,7 +148,7 @@ namespace TplWorkshop.Facts.BasicOps
 
             try
             {
-                task.Wait();
+                task.Wait(cancellationToken);
             }
             catch (AggregateException)
             {
