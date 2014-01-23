@@ -43,7 +43,7 @@ namespace TplWorkshop.Util.Visualizer
             RunFunc(delayDuration, () =>
             {
                 runAction();
-                return string.Empty;
+                return "(no result)";
             }, name);
         }
 

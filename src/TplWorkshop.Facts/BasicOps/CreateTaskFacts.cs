@@ -148,7 +148,7 @@ namespace TplWorkshop.Facts.BasicOps
 
             try
             {
-                task.Wait(cancellationToken);
+                task.Wait();
             }
             catch (AggregateException)
             {
