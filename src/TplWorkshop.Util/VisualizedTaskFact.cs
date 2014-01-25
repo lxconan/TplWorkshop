@@ -9,7 +9,7 @@ namespace TplWorkshop.Util
     {
         private readonly ITaskVisualizer m_visualizer;
 
-        protected ITaskVisualizer Visualizer { get { return m_visualizer; } }
+        protected ITaskVisualizer V { get { return m_visualizer; } }
 
         public VisualizedTaskFact(ITaskVisualizer visualizer)
         {

@@ -18,8 +18,7 @@ namespace TplWorkshop.Util.Facts
         public void should_add_new_record_after_action_running()
         {
             var taskVisualizer = new TaskVisualizer();
-            taskVisualizer.RunFunc(TimeSpan.FromSeconds(1), () => new object());
-
+            taskVisualizer.Start().Sleep(1).Dispose();
             ITaskVisualizerReport report = taskVisualizer.GetReport();
             Assert.Equal(1, GetAllRecords(report).Count);
         }
@@ -29,7 +28,7 @@ namespace TplWorkshop.Util.Facts
         {
             var taskVisualizer = new TaskVisualizer();
             const string expected = "task";
-            taskVisualizer.RunFunc(TimeSpan.FromSeconds(1), () => new object(), expected);
+            taskVisualizer.Start(expected).Dispose();
 
             ITaskVisualizerReport report = taskVisualizer.GetReport();
             ITaskVisualizerRecord record = GetAllRecords(report).Single();
@@ -41,45 +40,13 @@ namespace TplWorkshop.Util.Facts
         public void should_delay_and_execute()
         {
             var taskVisualizer = new TaskVisualizer();
-            TimeSpan delayDuration = TimeSpan.FromSeconds(3);
-            taskVisualizer.RunFunc(delayDuration, () => new object());
+            const int delayDuration = 3;
+            taskVisualizer.Start().Sleep(delayDuration).Dispose();
 
             ITaskVisualizerReport report = taskVisualizer.GetReport();
             ITaskVisualizerRecord record = GetAllRecords(report).Single();
 
-            Assert.True(record.Duration >= delayDuration.TotalSeconds);
-        }
-
-        [Fact]
-        public void should_get_result()
-        {
-            var taskVisualizer = new TaskVisualizer();
-            const string desiredResult = "hello";
-            taskVisualizer.RunFunc(TimeSpan.FromSeconds(1), () => desiredResult);
-
-            ITaskVisualizerReport report = taskVisualizer.GetReport();
-            ITaskVisualizerRecord record = GetAllRecords(report).Single();
-
-            Assert.Equal((int)TaskStatus.RanToCompletion, record.TaskStatus);
-            Assert.Equal("String: hello", record.TaskResult);
-        }
-
-        [Fact]
-        public void should_get_exception()
-        {
-            var taskVisualizer = new TaskVisualizer();
-
-            Assert.Throws<ArgumentException>(() =>
-            {
-                taskVisualizer.RunFunc<object>(
-                    TimeSpan.FromSeconds(1),
-                    () => { throw new ArgumentException(); });
-            });
-
-            ITaskVisualizerRecord record = GetAllRecords(taskVisualizer.GetReport()).Single();
-            
-            Assert.NotNull(record.TaskError);
-            Assert.Equal((int)TaskStatus.Faulted, record.TaskStatus);
+            Assert.True(record.Duration >= delayDuration);
         }
     }
 }

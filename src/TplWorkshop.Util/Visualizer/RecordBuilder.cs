@@ -8,8 +8,6 @@ namespace TplWorkshop.Util.Visualizer
         private static int s_untitledRef;
         private DateTime? m_startTime;
         private DateTime? m_endTime;
-        private object m_result;
-        private Exception m_error;
         private string m_name;
         private bool m_initialized;
         private int m_threadId;
@@ -42,40 +40,15 @@ namespace TplWorkshop.Util.Visualizer
             Interlocked.Exchange(ref s_untitledRef, 0);
         }
 
-        public TaskRunningRecord Build(object result)
+        public TaskRunningRecord Build()
         {
-            return Build(result, false);
-        }
-
-        public TaskRunningRecord BuildError(Exception result)
-        {
-            return Build(result, true);
-        }
-
-        private TaskRunningRecord Build(object result, bool isError)
-        {
-            SaveResult(result, isError);
             m_endTime = DateTime.Now;
             return new TaskRunningRecord(
                 m_name,
                 Guid.NewGuid(),
                 GetStartTime(),
                 GetEndTime(),
-                m_result,
-                m_error,
                 m_threadId);
-        }
-
-        private void SaveResult(object result, bool isError)
-        {
-            if (isError)
-            {
-                m_error = (Exception)result;
-            }
-            else
-            {
-                m_result = result;
-            }
         }
 
         private DateTime GetEndTime()

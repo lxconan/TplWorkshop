@@ -50,10 +50,9 @@
     <Compile Include="ITaskVisualizerReport.cs" />
     <Compile Include="ITaskVisualizerThread.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TaskVisualizerActionExtension.cs" />
+    <Compile Include="Tracer.cs" />
     <Compile Include="Visualizer\RecordBuilder.cs" />
     <Compile Include="Visualizer\TaskRunningRecord.cs" />
-    <Compile Include="Visualizer\TaskVisualizeExtension.cs" />
     <Compile Include="Visualizer\TaskVisualizer.cs" />
     <Compile Include="Visualizer\TaskVisualizerRecord.cs" />
     <Compile Include="Visualizer\TaskVisualizerReport.cs" />

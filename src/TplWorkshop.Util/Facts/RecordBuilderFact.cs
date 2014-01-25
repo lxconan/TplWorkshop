@@ -18,7 +18,7 @@ namespace TplWorkshop.Util.Facts
             var recordBuilder = CreateRecordBuilder();
 
             recordBuilder.Init(FakeThreadId, name);
-            TaskRunningRecord record = recordBuilder.Build(null);
+            TaskRunningRecord record = recordBuilder.Build();
 
             Assert.Equal("Untitled 1", record.Name);
         }
@@ -43,8 +43,8 @@ namespace TplWorkshop.Util.Facts
             recordBuilder1.Init(FakeThreadId, null);
             recordBuilder2.Init(FakeThreadId, null);
 
-            Assert.Equal("Untitled 1", recordBuilder1.Build(null).Name);
-            Assert.Equal("Untitled 2", recordBuilder2.Build(null).Name);
+            Assert.Equal("Untitled 1", recordBuilder1.Build().Name);
+            Assert.Equal("Untitled 2", recordBuilder2.Build().Name);
         }
 
         private static RecordBuilder CreateRecordBuilder(bool resetUntitleRefCount = true)

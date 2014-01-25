@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading;
 
 namespace TplWorkshop.Util.Visualizer
 {
@@ -14,37 +13,9 @@ namespace TplWorkshop.Util.Visualizer
             m_logs = new ConcurrentBag<TaskRunningRecord>();
         }
 
-        public void SaveRecord(TaskRunningRecord record)
+        public void SaveRecord(object record)
         {
-            m_logs.Add(record);
-        }
-
-        public T RunFunc<T>(TimeSpan delayDuration, Func<T> runAction, string name = null)
-        {
-            var recordBuilder = new RecordBuilder().Init(
-                Thread.CurrentThread.ManagedThreadId, 
-                name);
-            try
-            {
-                Thread.Sleep(delayDuration);
-                T result = runAction();
-                SaveRecord(recordBuilder.Build(result));
-                return result;
-            }
-            catch (Exception error)
-            {
-                SaveRecord(recordBuilder.BuildError(error));
-                throw;
-            }
-        }
-
-        public void RunAction(TimeSpan delayDuration, Action runAction, string name = null)
-        {
-            RunFunc(delayDuration, () =>
-            {
-                runAction();
-                return "(no result)";
-            }, name);
+            m_logs.Add((TaskRunningRecord)record);
         }
 
         public ITaskVisualizerReport GetReport()
@@ -58,10 +29,7 @@ namespace TplWorkshop.Util.Visualizer
                 Duration = (log.EndTime - log.StartTime).TotalSeconds,
                 Name = log.Name,
                 RelativeEndSecond = (log.EndTime - overallStartTime).TotalSeconds,
-                RelativeStartSecond = (log.StartTime - overallStartTime).TotalSeconds,
-                TaskError = log.CapturedError.FormatTaskError(),
-                TaskResult = log.TaskResult.FormatTaskResult(),
-                TaskStatus = (int) log.Status
+                RelativeStartSecond = (log.StartTime - overallStartTime).TotalSeconds
             }).ToArray();
 
             ITaskVisualizerThread[] threads = records
@@ -81,6 +49,11 @@ namespace TplWorkshop.Util.Visualizer
                 TotalSeconds = (overallEndTime - overallStartTime).TotalSeconds,
                 TotalThreads = threads.Length
             };
+        }
+
+        public Tracer Start(string name = null)
+        {
+            return new Tracer(this, name);
         }
     }
 }

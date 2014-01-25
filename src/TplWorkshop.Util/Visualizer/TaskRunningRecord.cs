@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 namespace TplWorkshop.Util.Visualizer
 {
@@ -9,25 +8,19 @@ namespace TplWorkshop.Util.Visualizer
         private readonly Guid m_id;
         private readonly DateTime m_startTime;
         private readonly DateTime m_endTime;
-        private readonly object m_taskResult;
-        private readonly Exception m_capturedError;
         private readonly int m_threadId;
 
         public TaskRunningRecord(
             string name,
             Guid id,
             DateTime startTime, 
-            DateTime endTime,
-            object taskResult, 
-            Exception capturedError, 
+            DateTime endTime, 
             int threadId)
         {
             m_name = name;
             m_id = id;
             m_startTime = startTime;
             m_endTime = endTime;
-            m_taskResult = taskResult;
-            m_capturedError = capturedError;
             m_threadId = threadId;
         }
 
@@ -46,37 +39,9 @@ namespace TplWorkshop.Util.Visualizer
             get { return m_endTime; }
         }
 
-        public object TaskResult
-        {
-            get { return m_taskResult; }
-        }
-
-        public Exception CapturedError
-        {
-            get { return m_capturedError; }
-        }
-
         public string Name
         {
             get { return m_name; }
-        }
-
-        public TaskStatus Status
-        {
-            get
-            {
-                if (m_capturedError == null)
-                {
-                    return TaskStatus.RanToCompletion;
-                }
-
-                if (m_capturedError is TaskCanceledException)
-                {
-                    return TaskStatus.Canceled;
-                }
-                    
-                return TaskStatus.Faulted;
-            }
         }
 
         public int ThreadId
