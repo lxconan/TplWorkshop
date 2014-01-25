@@ -43,6 +43,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmbeddedResource\Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="Facts\RecordBuilderFact.cs" />
     <Compile Include="Facts\TaskVisualizerFact.cs" />
     <Compile Include="ITaskVisualizer.cs" />
@@ -51,9 +56,12 @@
     <Compile Include="ITaskVisualizerThread.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tracer.cs" />
+    <Compile Include="ITaskVisualizerHint.cs" />
+    <Compile Include="Visualizer\Hint.cs" />
     <Compile Include="Visualizer\RecordBuilder.cs" />
     <Compile Include="Visualizer\TaskRunningRecord.cs" />
     <Compile Include="Visualizer\TaskVisualizer.cs" />
+    <Compile Include="Visualizer\TaskVisualizerHint.cs" />
     <Compile Include="Visualizer\TaskVisualizerRecord.cs" />
     <Compile Include="Visualizer\TaskVisualizerReport.cs" />
     <Compile Include="VisualizedTaskFact.cs" />
@@ -61,6 +69,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="EmbeddedResource\Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\test_template.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

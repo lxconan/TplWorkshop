@@ -21,15 +21,17 @@ namespace TplWorkshop.Facts.BasicOps
         [Fact]
         public void create_task_by_factory()
         {
-            var task = Task.Factory.StartNew(() => V.Start().Sleep(1).Finish("hello"));
+            var task = Task.Factory.StartNew(() => V.Start("task 1").Sleep(1).Finish("hello"));
             Assert.Equal("hello", task.Result);
         }
 
         [Fact]
         public void wait_for_one_task()
         {
-            var task = Task.Factory.StartNew(() => V.Start().Sleep(1).Finish("hello"));
+            var task = Task.Factory.StartNew(() => V.Start("task 1").Sleep(1).Finish("hello"));
             task.Wait();
+            V.Hint("Waiting for 'task 1' complete!");
+
             Assert.True(task.IsCompleted);
             Assert.Equal("hello", task.Result);
         }
@@ -40,11 +42,13 @@ namespace TplWorkshop.Facts.BasicOps
             Task[] tasks =
             {
                 Task.Factory.StartNew(() => V.Start("task 1").Sleep(1).Finish()),
-                Task.Factory.StartNew(() => V.Start("task 2").Sleep(1).Finish()),
-                Task.Factory.StartNew(() => V.Start("task 3").Sleep(1).Finish())
+                Task.Factory.StartNew(() => V.Start("task 2").Sleep(2).Finish()),
+                Task.Factory.StartNew(() => V.Start("task 3").Sleep(3).Finish())
             };
 
             Task.WaitAll(tasks);
+            V.Hint("Waiting for all tasks using Task.WaitAll() complete.");
+
             Assert.True(tasks.All(task => task.IsCompleted));
         }
 
@@ -60,10 +64,13 @@ namespace TplWorkshop.Facts.BasicOps
 
             int completeIndex = Task.WaitAny(tasks);
 
-            Trace.WriteLine("First completed task's index is : " + completeIndex);
+            V.Hint(
+                "Waiting for first completed task using Task.WaitAny() complete. " +
+                "The waited task index is " + completeIndex);
             Assert.True(tasks[completeIndex].IsCompleted);
 
             Task.WaitAll(tasks);
+            V.Hint("Waiting for all tasks complete.");
         }
 
         [Fact]
@@ -88,10 +95,12 @@ namespace TplWorkshop.Facts.BasicOps
                         Task.Factory.StartNew(
                             () => V.Start("task 2").Sleep(3).Dispose(),
                             TaskCreationOptions.AttachedToParent);
+                        V.Hint("Start running child task: 'task 2'.");
                     }
                 });
 
             task.Wait();
+            V.Hint("Waiting for parent task 'task 1' complete.");
         }
 
         [Fact]
@@ -118,6 +127,10 @@ namespace TplWorkshop.Facts.BasicOps
                     Trace.WriteLine(exception.Message);
                 }
             }
+            finally
+            {
+                V.Hint("Wait all tasks complete.");
+            }
         }
 
         [Fact]
@@ -134,6 +147,7 @@ namespace TplWorkshop.Facts.BasicOps
                         tracer.Sleep(2);
                         if (cancellationToken.IsCancellationRequested)
                         {
+                            V.Hint("Task cancellation detected.");
                             throw new OperationCanceledException(cancellationToken);
                         }
 
@@ -152,6 +166,10 @@ namespace TplWorkshop.Facts.BasicOps
             catch (AggregateException)
             {
                 Trace.WriteLine("Exception caught!");
+            }
+            finally
+            {
+                V.Hint("Waiting for task 'task 1' complete.");
             }
 
             Assert.True(task.IsCanceled);

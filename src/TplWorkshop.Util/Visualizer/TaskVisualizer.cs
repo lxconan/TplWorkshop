@@ -7,10 +7,12 @@ namespace TplWorkshop.Util.Visualizer
     internal class TaskVisualizer : ITaskVisualizer
     {
         private readonly ConcurrentBag<TaskRunningRecord> m_logs;
+        private readonly ConcurrentBag<Hint> m_hints;
 
         public TaskVisualizer()
         {
             m_logs = new ConcurrentBag<TaskRunningRecord>();
+            m_hints = new ConcurrentBag<Hint>();
         }
 
         public void SaveRecord(object record)
@@ -43,17 +45,33 @@ namespace TplWorkshop.Util.Visualizer
                         })
                 .ToArray();
 
+            ITaskVisualizerHint[] hints = m_hints.Select(
+                h =>
+                    new TaskVisualizerHint
+                    {
+                        Description = h.Description,
+                        RelativePosition = (h.Position - overallStartTime).TotalSeconds
+                    })
+                .Cast<ITaskVisualizerHint>()
+                .ToArray();
+
             return new TaskVisualizerReport
             {
                 Threads = threads,
                 TotalSeconds = (overallEndTime - overallStartTime).TotalSeconds,
-                TotalThreads = threads.Length
+                TotalThreads = threads.Length,
+                Hints = hints
             };
         }
 
         public Tracer Start(string name = null)
         {
             return new Tracer(this, name);
+        }
+
+        public void Hint(string description)
+        {
+            m_hints.Add(new Hint {Position = DateTime.Now, Description = description});
         }
     }
 }
