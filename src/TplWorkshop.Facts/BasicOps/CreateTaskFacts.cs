@@ -110,10 +110,10 @@ namespace TplWorkshop.Facts.BasicOps
             {
                 Task.Factory.StartNew(() =>
                     V.Start("task 1").Sleep(1)
-                        .Finish(new ArgumentException("ArgumentException"))),
+                        .FinishError(new ArgumentException("ArgumentException"))),
                 Task.Factory.StartNew(() =>
                     V.Start("task 2").Sleep(2)
-                        .Finish(new InvalidOperationException("InvalidOperationException")))
+                        .FinishError(new InvalidOperationException("InvalidOperationException")))
             };
 
             try

@@ -37,7 +37,7 @@ namespace TplWorkshop.Util
             Dispose();
         }
 
-        public void Finish(Exception error)
+        public void FinishError(Exception error)
         {
             Dispose();
             throw error;
